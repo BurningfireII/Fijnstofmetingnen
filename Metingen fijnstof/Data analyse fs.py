@@ -13,21 +13,48 @@ from scipy.optimize import curve_fit as cf
 import locale
 
 def interpolate(x,N):
-    previous = 0
-    for i in range(N):
-        DI = len(x[previous:(len(x)-1)])/(N - i)
-        New = previous + round(DI)
-        if New + 1 < len(x):
-            av = (x[New]+x[New+1])/2
+    """
+    Parameters
+    ----------
+    x : array
+        Dataset to interpolate.
+    N : Int
+        howmany points to interpolate
+
+    Returns
+    -------
+    x : array
+        interpolated dataset.
+
+    """
+    previous = 0 # sets first point
+    for i in range(N): # loops for n times
+        DI = len(x[previous:(len(x)-1)])/(N - i) # determines by how much index should increase
+        New = previous + round(DI) 
+        if New + 1 < len(x): # checks if not last point
+            av = (x[New]+x[New+1])/2 # interpolates
         else:
-            av = x[New]
-        temp = np.append(x[:New],av)
+            av = x[New] # if last point just copies
+        temp = np.append(x[:New],av) # makes new array
         x = np.append(temp,x[New:])
-        previous = New
+        previous = New 
     return x
         
 def Norm_corr(x1, x2):
-    
+    """
+    Parameters
+    ----------
+    x1 : array
+        Dataset to normalize and correlate.
+    x2 : array
+        Dataset to normalize and correlate.
+
+    Returns
+    -------
+    c : array
+        normalized crosscorrelation.
+
+    """
     a = (x1 - np.mean(x1)) / (np.std(x1) * len(x1))
     b = (x2-np.mean(x2)) / (np.std(x2))
     c = np.correlate(a, b, mode='full')
@@ -35,12 +62,39 @@ def Norm_corr(x1, x2):
     return c
 
 def smooth(x, kern):
+    """
+    Parameters
+    ----------
+    x : array
+        Dataset to smooth.
+    kern : Int
+        how much to smooth.
+
+    Returns
+    -------
+    smooth : array
+        smoothed data set.
+
+    """
     kernel = np.ones(kern) / kern
     smooth = np.convolve(x, kernel, mode='same')
     return smooth
 
 def Z_test(data, ex):
-    
+        """
+    Parameters
+    ----------
+    data : array
+        Dataset to test.
+    ex : float
+        expected value.
+
+    Returns
+    -------
+    Z : float
+        Z value.
+
+    """
     sqn = np.sqrt(np.size(data))
     std = np.std(data)
     mean = np.mean(data)
@@ -63,10 +117,10 @@ df = pd.read_csv(r'C:\Users\daana\Documents\Metingen fijnstof\time.txt') #reads 
 times = df.to_numpy()
 time = np.array([])
 times.transpose()
-Data_1 = Data_1[793:]
-Data_2 = Data_2[809:]
-Data_1 = interpolate(Data_1, 15)
-Delta = np.abs(Data_1 - Data_2)
+Data_1 = Data_1[793:] # slices valid data
+Data_2 = Data_2[809:] # slices valid data
+Data_1 = interpolate(Data_1, 15) # interpolates data set
+Delta = np.abs(Data_1 - Data_2) # determines residue
 
 print("gemiddelde fijnstof niveaus")
 print(np.mean(Data_1))
@@ -79,7 +133,7 @@ res = abs(s_1-s_2)
 
 print("NCC\n",np.max(corr),"\n")
 
-U = 2*Delta/ (Data_1 + Data_2)
+U = 2*Delta/ (Data_1 + Data_2) # determines relative difference
 Us = 2* res/ (s_1 + s_2)
 
 z_val = Z_test(U, 0.05)
@@ -88,6 +142,7 @@ print("Z-waarde: ", z_val)
 print(np.mean(U))
 print(3*np.std(U))
 #print(U, Us)
+# formats time for x-axis
 for i, t in enumerate(times):
     if t[2] < 10:
         h = "0" + str(t[2])
@@ -98,7 +153,7 @@ for i, t in enumerate(times):
         m = str(t[3])
     time = np.append(time,('(' + str(t[0]) + '/' + str(t[1]) + ') ' + h +':'+ m))
     
-time = time[809:]
+time = time[809:] # takes valid times
 
 ticks = 76
 
